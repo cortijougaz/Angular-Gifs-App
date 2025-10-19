@@ -6,15 +6,19 @@ import {signal} from '@angular/core';
 import {Gif} from '../interfaces/gif.interface';
 import {GifMapper} from '../mapper/gif.mapper';
 import {map} from 'rxjs';
+import {computed} from '@angular/core';
+import {tap} from 'rxjs';
 
 
 @Injectable({providedIn: 'root'})
 export class GifsService {
-
   private http = inject(HttpClient);
 
   trendingGifs = signal<Gif[]>([]);
   trendingGifsLoading = signal(true);
+
+  searchHistory = signal<Record<string, Gif[]>>({})
+  serachHistoryKeys = computed(() => Object.keys(this.searchHistory()))
 
   constructor() {
     this.loadTrendingGifs();
@@ -25,7 +29,7 @@ export class GifsService {
     this.http.get<GiphyResponse>(`${environment.giphyUrl}/gifs/trending`, {
       params: {
         api_key: environment.giphyApikey,
-        limit: 20,
+        limit: 10,
         offset: 0,
         //rating: 'g',
       }
@@ -41,7 +45,7 @@ export class GifsService {
     return this.http.get<GiphyResponse>(`${environment.giphyUrl}/gifs/search`, {
       params: {
         api_key: environment.giphyApikey,
-        limit: 20,
+        limit: 10,
         offset: 0,
         q: query,
         //rating: 'g',
@@ -49,6 +53,11 @@ export class GifsService {
     }).pipe(
       map(({data}) => data),
       map((items) => GifMapper.mapGiphyItemsToGifArray(items)),
+      tap(items => {
+        this.searchHistory.update(history => ({
+          ...history, [query.toLowerCase()]:items
+        }))
+      })
     );
     //.subscribe((resp) => {
     //  const gifs = GifMapper.mapGiphyItemsToGifArray(resp.data);
