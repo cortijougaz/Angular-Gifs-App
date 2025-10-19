@@ -29,5 +29,5 @@ const imageUrls: string[] = [
   styleUrl: './trending-page.component.css'
 })
 export default class TrendingPageComponent {
-    gitService = inject(GifsService);
+    gifService = inject(GifsService);
 }
