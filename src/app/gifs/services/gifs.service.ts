@@ -8,6 +8,7 @@ import {GifMapper} from '../mapper/gif.mapper';
 import {map} from 'rxjs';
 import {computed} from '@angular/core';
 import {tap} from 'rxjs';
+import {Observable} from 'rxjs';
 
 
 @Injectable({providedIn: 'root'})
@@ -41,7 +42,7 @@ export class GifsService {
     });
   }
 
-  searchGifs(query: string) {
+  searchGifs(query: string): Observable<Gif[]> {
     return this.http.get<GiphyResponse>(`${environment.giphyUrl}/gifs/search`, {
       params: {
         api_key: environment.giphyApikey,
@@ -55,7 +56,7 @@ export class GifsService {
       map((items) => GifMapper.mapGiphyItemsToGifArray(items)),
       tap(items => {
         this.searchHistory.update(history => ({
-          ...history, [query.toLowerCase()]:items
+          ...history, [query.toLowerCase().trim()]: items
         }))
       })
     );
@@ -64,4 +65,9 @@ export class GifsService {
     //  console.log({search: gifs});
     //});
   }
+
+  getHistoryGifs(query: string): Gif[] {
+    return this.searchHistory()[query] ?? [];
+  }
+
 }
