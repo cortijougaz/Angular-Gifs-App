@@ -2,14 +2,14 @@ import {Injectable, inject} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {environment} from '@environments/environment';
 import type {GiphyResponse} from '../interfaces/giphy.interfaces';
-import {signal, EffectRef, effect, computed } from '@angular/core';
+import {signal, EffectRef, effect, computed} from '@angular/core';
 import {Gif} from '../interfaces/gif.interface';
 import {GifMapper} from '../mapper/gif.mapper';
 import {Observable, tap, map} from 'rxjs';
 
 const GIF_KEY = 'gifs';
 
-const loadFromLocalStorage = () =>{
+const loadFromLocalStorage = () => {
   const searchHistory = localStorage.getItem(GIF_KEY);
   return searchHistory ? JSON.parse(searchHistory) : {};
 }
@@ -20,6 +20,14 @@ export class GifsService {
 
   trendingGifs = signal<Gif[]>([]);
   trendingGifsLoading = signal(true);
+
+  trendingGifGroup = computed<Gif[][]>(() => {
+    const groups = [];
+    for (let i = 0; i < this.trendingGifs().length; i += 3) {
+      groups.push(this.trendingGifs().slice(i, i + 3));
+    }
+    return groups;
+  });
 
   searchHistory = signal<Record<string, Gif[]>>(loadFromLocalStorage());
   searchHistoryKeys = computed(() => Object.keys(this.searchHistory()));
@@ -44,7 +52,6 @@ export class GifsService {
       const gifs = GifMapper.mapGiphyItemsToGifArray(resp.data);
       this.trendingGifs.set(gifs);
       this.trendingGifsLoading.set(false);
-      console.log({gifs});
     });
   }
 
@@ -68,7 +75,6 @@ export class GifsService {
     );
     //.subscribe((resp) => {
     //  const gifs = GifMapper.mapGiphyItemsToGifArray(resp.data);
-    //  console.log({search: gifs});
     //});
   }
 
